@@ -17,9 +17,16 @@ public class LoginService {
     private final PasswordEncoder passwordEncoder;
 
     public String login(String email, String password) {
-        User user = userRepository.findAllByEmail(email);
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            log.warn("User not found: {}", email);
+            return null;
+        }
+
+        if (passwordEncoder.matches(password, user.getPassword())) {
             return user.getUserName();
+        } else {
+            log.warn("Password not match: {}", email);
         }
 
         return null;

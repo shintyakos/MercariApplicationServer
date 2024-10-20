@@ -43,10 +43,10 @@ public class LoginRestController {
         if (username != null && !username.isEmpty()) {
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.HOUR, 24);
-            log.error("expiration Date: {}", sdf.format(calendar.getTime()));
+            log.info("expiration Date: {}", sdf.format(calendar.getTime()));
 
             String token = authorizationHandlerInterceptor.generateToken(username, calendar.getTime(), authorizationHandlerInterceptor.getSecretKey());
-            log.error("token: {}", token);
+            log.info("token: {}", token);
 
             response.setToken(token);
         }

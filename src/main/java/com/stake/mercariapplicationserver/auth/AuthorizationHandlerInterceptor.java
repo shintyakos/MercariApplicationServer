@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -67,15 +68,20 @@ public class AuthorizationHandlerInterceptor implements HandlerInterceptor {
 
         // トークンを取得しidを取得する
         String token = authorization.substring(7);
-        String id = getIdFromToken(token, secretKey);
-        User user = userRepository.findAllByUsername(id);
-        if (user == null) {
+        try {
+            String id = getIdFromToken(token, secretKey);
+            User user = userRepository.findByUsername(id);
+            if (user == null) {
+                return false;
+            }
+
+            log.info("User {} is authorized", user.getUserName());
+            request.setAttribute("username", user.getUserName());
+            return true;
+        } catch(Exception error) {
+            log.error("トークンの解析に失敗しました。 {}", error.getMessage());
             return false;
         }
-
-        log.info("User {} is authorized", user.getUserName());
-        request.setAttribute("username", user.getUserName());
-        return true;
     }
 
     @Override

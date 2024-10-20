@@ -14,7 +14,7 @@ public class LoginRequest {
     private String email;
 
     @NotEmpty
-    @Size(min = 8, max = 20)
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[a-zA-Z0-9]+$")
+    @Size(min = 12, max = 64)
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).*$")
     private String password;
 }
