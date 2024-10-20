@@ -8,9 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -35,11 +33,13 @@ public class AuthorizationHandlerInterceptor implements HandlerInterceptor {
     @Autowired
     private UserRepository userRepository;
 
-    public String generateToken(String id, Date date, String key) {
+    public String generateToken(String id, String key) {
+        long expirationTimeInMilliseconds = 3600000; // 1時間
+
         return Jwts
                 .builder()
                 .setSubject(id)
-                .setExpiration(date)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMilliseconds))
                 .signWith(Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8)))
                 .compact();
     }
@@ -61,7 +61,7 @@ public class AuthorizationHandlerInterceptor implements HandlerInterceptor {
         }
 
         // Bearer tokenの形式であることをチェック
-        if(authorization.indexOf("Bearer ") != 0) {
+        if (!authorization.startsWith("Bearer ")) {
             log.error("Authorization header is invalid");
             return false;
         }
@@ -86,7 +86,6 @@ public class AuthorizationHandlerInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        log.error("AuthorizationHandlerInterceptor.preHandle");
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }

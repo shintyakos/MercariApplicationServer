@@ -53,6 +53,6 @@ public class User {
     @NotNull
     @ColumnDefault("0")
     @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false;
+    private Boolean isDeleted;
 
 }

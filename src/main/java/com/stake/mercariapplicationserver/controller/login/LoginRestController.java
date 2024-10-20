@@ -17,9 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-
 @RestController
 @AllArgsConstructor
 @Slf4j
@@ -31,26 +28,23 @@ public class LoginRestController {
     @PostMapping("/login")
     @NonAuthorize
     public ResponseEntity<LoginResponse> login(@Validated @RequestBody LoginRequest loginRequest, BindingResult result) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        LoginResponse response = new LoginResponse();
-
         if (result.hasErrors()) {
-            log.error("Validation error: {}", result);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            log.warn("Validation error occurred: {}", result.getAllErrors());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input");
         }
 
-        String username = loginService.login(loginRequest.getEmail(), loginRequest.getPassword());
-        if (username != null && !username.isEmpty()) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.HOUR, 24);
-            log.info("expiration Date: {}", sdf.format(calendar.getTime()));
+        try {
+            String username = loginService.login(loginRequest.getEmail(), loginRequest.getPassword());
+            String token = authorizationHandlerInterceptor.generateToken(username, authorizationHandlerInterceptor.getSecretKey());
 
-            String token = authorizationHandlerInterceptor.generateToken(username, calendar.getTime(), authorizationHandlerInterceptor.getSecretKey());
-            log.info("token: {}", token);
+            log.info("Login successful for user: {}", username);
 
+            LoginResponse response = new LoginResponse();
             response.setToken(token);
+            return ResponseEntity.ok(response);
+        } catch (Exception error) {
+            log.warn("Login failed: {}", error.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
-
-        return ResponseEntity.ok(response);
     }
 }
